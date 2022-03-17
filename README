@@ -1,0 +1,48 @@
+Nume: Țălină Laura-Florina
+Grupa: 334CB
+
+Tema realizata pentru cursul de Algoritmi Paraleli si Distribuiti
+Scheletul este oferit de catre echipa de APD, iar fisierul
+"tema1.c" este adaugat de catre mine, impreuna cu transformarea functiilor
+din "genetic_algorithm.c" pentru a obtine o implementare paralela dintr-o
+implementare seriala.
+
+Pornind de la implementarea secventiala a problemei, am modificat main-ul
+din fisierul tema1.c astfel incat sa porneasca un numar de threaduri care
+este primit ca parametru. 
+
+Fiecare dintre threadurile pornite va rula functia run_genetics_algorithm,
+iar pentru aceasta am modificat headerul functiiei, aducand-o la forma
+void *f(void *args). De asemenea, pentru a trimite argumente la functie,
+am definit o structura in genetic_algorithm.h in care am adaugat toti
+parametrii vechi ai functiei, precum si numarul de threaduri si id-urile
+fiecarui thread.
+
+Pentru a putea paraleliza functia run_genetics_algorithm, am mutat
+initializarea vectorilor current_generation si next_generation
+in main, astfel incat aceasta sa se realizeze o singura data,
+ci nu pentru fiecare thread in parte.
+
+Primul lucru paralelizat a fost functia compute_fitness_function, careia i-am
+modificat headerul, transmitandu-i numarul de threaduri si id-ul, necesare
+la calcularea indicilor de start si end, utilizati in for.
+Tot prin calcularea indicilor de start si end in functie de id-ul threadului
+curent am paralelizat si celelalte foruri din interiorul functiei
+run_genetics_algorithm, precum si qsort-ul. In urma apelarii qsort-ului
+vectorul este sortat partial, fiind alcatuite dintr-un numar de bucati sortate
+egal cu numarul de threaduri. Folosind aceasta proprietate, am realizat reconstituirea
+vectorului current_generation, cu ajutorul functiei de merge pe care am preluat-o din
+laborator, si am adaptat-o pentru a functiona pentru tipul nostru de vector.
+Deoarece nu am gasit o formula care sa ma ajute la reconstituirea directa a vectorului,
+am ales o abordare in care pentru fiecare numar de threaduri care ruleaza, stiu deja
+in cate parti sortate va fi vectorul meu impartit. In functia merge_by_threads,
+am creeat un nou vector, new_current_generation care ajuta la reconstituirea 
+vectorului initial. Se apeleaza merge, astfel incat pentru un numar de doua threaduri
+se unifica prima jumatate cu cea de a doua, pentru trei threaduri se interclaseaza
+primele 2 treimi, iar apoi bucata rezultata este supusa procesului de interclasare cu
+cea de a3a treime, iar pentru patru threaduri se interclaseaza primele 2 parti, urmatoarele
+2 parti si in final cele 2 parti rezultate.
+
+In structura creata am adaugat si un pointer la bariera.
+Bariera a fost folosita in momente esentiale in care toate threadurile
+trebuiau sa ajunga in acelasi punct.
